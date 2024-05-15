@@ -1,0 +1,49 @@
+pipeline {
+    agent {
+        node {
+            label 'tweet-trend-new'
+        }
+    }
+
+    environment {
+        DOCKER_IMAGE = 'my-dotnet-app' // Name of the Docker image
+        DOCKERFILE_PATH = './Dockerfile' // Path to Dockerfile
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    // Build Docker image
+                    docker.build(env.DOCKER_IMAGE, "-f ${env.DOCKERFILE_PATH} .")
+                }
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                script {
+                    // Run tests inside the Docker container
+                    docker.image(env.DOCKER_IMAGE).inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                        sh 'dotnet test'
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                // Example deployment steps (e.g., push image to registry, deploy to Kubernetes, etc.)
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
